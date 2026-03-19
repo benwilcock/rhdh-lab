@@ -17,7 +17,7 @@ A customizable development and testing environment for [Red Hat Developer Hub](h
 ### 1. Clone the repository
 
 ```bash
-git clone --recurse-submodules <repo-url> rhdh-lab
+git clone --recurse-submodules https://github.com/benwilcock/rhdh-lab.git rhdh-lab
 cd rhdh-lab
 ```
 
