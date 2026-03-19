@@ -2,6 +2,8 @@
 
 A customizable development and testing environment for [Red Hat Developer Hub](https://developers.redhat.com/rhdh) (RHDH). Wraps the official [rhdh-local](https://github.com/redhat-developer/rhdh-local) project with a copy-sync customization system, lifecycle scripts, and plugin management.
 
+![RHDH running locally with customized plugins -- catalog, APIs, TechDocs, Tech Radar, RBAC, Orchestrator, Notifications, and more](docs/img/rhdh-local-screenshot.png)
+
 > **Note:** This is for development and testing only, not for production use.
 
 ## Prerequisites
@@ -63,9 +65,11 @@ rhdh-lab/
 - **[Copy-sync customization system](docs/architecture.md)** -- keeps your configuration separate from the upstream project for conflict-free updates
 - **[Plugin management](docs/baseline-configuration.md)** -- pre-configured dynamic plugins for GitHub, Jenkins, RBAC, TechDocs, notifications, scorecards, and more
 - **[Backup and restore](docs/backup.md)** (`backup.sh`) -- portable archives of your setup
-- **[AI coding assistant rules and skills](docs/cursor-rules-and-skills.md)** -- structured guidance in `.cursor/rules/` and `.cursor/skills/` that teaches AI assistants the project's architecture, workflows, and constraints
+- **[AI coding assistant rules and skills](docs/cursor-rules-and-skills.md)** -- structured guidance in `.cursor/rules/` and `.cursor/skills/` that teaches AI assistants the project's architecture, workflows, and constraints. Works with any assistant using the `*.mdc` format including Claude Code if you ask Claude to add a sutable `CLAUDE.md` file.
 
 ## Common Commands
+
+The bash scripts let you launch RHDH Local in various configuration states depending on your needs.
 
 ```bash
 ./up.sh --customized                 # Start with your config
@@ -94,10 +98,12 @@ See the [docs/](docs/README.md) folder for detailed guides:
 
 ## Updating RHDH Local
 
+One of the main reasons I created this project was because it made it easier to stay up to date with changes in RHDH Local.
+
 ```bash
 ./down.sh
 cd rhdh-local && git pull && cd ..
-./up.sh --customized
+./up.sh --baseline # Handy for checking everything starts up OK before customizing further
 ```
 
 ## License
