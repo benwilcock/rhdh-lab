@@ -159,7 +159,7 @@ plugins:
         integrations:
           jira:
             - host: 'https://issues.redhat.com'
-              token: Bearer testtest
+              token: ${JIRA_TOKEN}
           email:
             host: ${EMAIL_HOSTNAME}
             port: ${EMAIL_PORT} #587

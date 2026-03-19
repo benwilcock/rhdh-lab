@@ -23,5 +23,5 @@ services:
       - 8567:8080    # Web UI (external:internal)
       - 50000:50000  # Agent communication
     volumes:
-      - /Users/bwilcock/Code/container-services/jenkins/config:/var/jenkins_home
+      - ${JENKINS_CONFIG_PATH:-./.jenkins-data}:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock

@@ -2,14 +2,32 @@
 rhdh-customizations/.env
 rhdh-customizations/configs/extra-files/github-app-credentials.yaml
 
+# Certificates and private keys
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+
+# Generic secret files
+credentials.yaml
+secrets.yaml
+*.credentials.yaml
+
 # macOS
 .DS_Store
 
 # IDE
 .idea/
 
-# Backups (large archives)
+# Backups and archives
 *.tar.gz
+*.tar.bz2
+*.zip
+
+# Local env overrides
+.env.local
+.env.*.local
 
 # Cursor AI -- track rules and skills, ignore personal settings
 .cursor/mcp.json

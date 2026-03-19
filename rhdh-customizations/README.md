@@ -94,7 +94,7 @@ cd ../rhdh-local
 To backup your customizations:
 
 ```bash
-cd /Users/bwilcock/Code/redhat-developer
+cd /path/to/rhdh-lab
 tar -czf ~/rhdh-customizations-backup-$(date +%Y-%m-%d).tar.gz rhdh-customizations/
 ```
 
