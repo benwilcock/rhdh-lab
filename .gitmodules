@@ -1,0 +1,3 @@
+[submodule "rhdh-local"]
+	path = rhdh-local
+	url = https://github.com/redhat-developer/rhdh-local.git

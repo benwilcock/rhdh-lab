@@ -1,0 +1,24 @@
+# Custom User entities for GitHub authentication.
+# The usernameMatchingUserEntityName resolver requires metadata.name
+# to exactly match the GitHub username of the person signing in.
+
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: benwilcock
+spec:
+  profile:
+    displayName: Ben Wilcock
+  memberOf:
+    - rhdh-team
+
+---
+
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: rhdh-team
+  title: RHDH team
+spec:
+  type: team
+  children: []

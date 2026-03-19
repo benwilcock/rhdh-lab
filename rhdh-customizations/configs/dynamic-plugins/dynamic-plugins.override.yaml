@@ -1,0 +1,304 @@
+# Include default RHDH plugins (e.g. dynamic home page).
+# NOTE: dynamic-plugins.yaml and orchestrator/configs/dynamic-plugins/dynamic-plugins.yaml
+# are NOT included here because they define plugins that our override (or the 1.9 defaults)
+# also defines, and the 1.9 installer rejects duplicate plugin configurations.
+# Orchestrator plugin configs (dataIndexService URLs) are set directly in the plugins section below.
+includes:
+   - dynamic-plugins.default.yaml
+   - developer-lightspeed/configs/dynamic-plugins/dynamic-plugins.lightspeed.yaml
+
+plugins:
+  # Disable floating action button (plugin fails to load: PluginRoot not found; avoids console errors and blank screen)
+  - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-global-floating-action-button
+    disabled: true
+
+  # GitHub Integration for Authentication, Scaffolder Actions, Catalog Import etc.
+  - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-dynamic
+    disabled: false
+  - package: ./dynamic-plugins/dist/backstage-plugin-catalog-backend-module-github-org-dynamic
+    disabled: false
+  - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
+    disabled: false
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/roadiehq-backstage-plugin-github-pull-requests:bs_1.45.3__3.6.2
+    disabled: false
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-github-issues:bs_1.45.3__0.16.0
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage-community.plugin-github-issues:
+            mountPoints:
+              - mountPoint: entity.page.issues/cards
+                importName: GithubIssuesCard
+                config:
+                  layout:
+                    gridColumn: "1 / -1"
+                  if:
+                    allOf:
+                      - hasAnnotation: github.com/project-slug
+
+
+  # Role Based Access Control [RBAC]
+  - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
+    disabled: false
+
+  # Tech Radar backend plugin - fetches JSON data from the URL in app-config techRadar.url
+  - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar-backend-dynamic
+    disabled: false
+
+  # Tech Radar frontend plugin
+  - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage-community.plugin-tech-radar:
+            apiFactories:
+              - importName: TechRadarApi
+            appIcons:
+              - name: techRadar
+                importName: TechRadarIcon
+            dynamicRoutes:
+              - path: /tech-radar
+                importName: TechRadarPage
+                menuItem:
+                  icon: techRadar
+                  text: Tech Radar
+                config:
+                  props:
+                    width: 1500
+                    height: 800
+
+  # Quay plugin
+  - package: ./dynamic-plugins/dist/backstage-community-plugin-quay
+    disabled: false
+
+  # TechDocs Addons
+  - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage.plugin-techdocs-module-addons-contrib:
+            techdocsAddons:
+              - importName: TextSize
+              - importName: ReportIssue
+              - importName: LightBox
+
+  # Bulk Import
+  - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-bulk-import-backend-dynamic
+    disabled: false
+  - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-bulk-import
+    disabled: false
+
+  # Jenkins TAB integration
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-jenkins-backend:bs_1.45.3__0.22.0
+    disabled: false
+    pluginConfig:
+      jenkins:
+        instances:
+          - name: default
+            baseUrl: ${JENKINS_URL}
+            username: ${JENKINS_USERNAME}
+            apiKey: ${JENKINS_TOKEN}
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-jenkins:bs_1.45.3__0.26.0
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage-community.plugin-jenkins:
+            mountPoints:
+              - mountPoint: entity.page.ci/cards
+                importName: EntityJenkinsContent
+                config:
+                  layout:
+                    gridColumn: "1 / -1"
+                  if:
+                    allOf:
+                      - isJenkinsAvailable
+
+  # TODO TAB integration
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-todo:bs_1.45.3__0.14.0!backstage-community-plugin-todo
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage-community.plugin-todo:
+            mountPoints:
+              - mountPoint: entity.page.todo/cards
+                importName: EntityTodoContent
+            entityTabs:
+              - path: /todo
+                title: Todo
+                mountPoint: entity.page.todo
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/backstage-community-plugin-todo-backend:bs_1.45.3__0.15.0!backstage-community-plugin-todo-backend
+    disabled: false
+
+
+  # Extensions Plugin - override default save path so extensions installed via the UI
+  # are saved back into our override file rather than the default extensions file.
+  - package: ./dynamic-plugins/dist/red-hat-developer-hub-backstage-plugin-extensions-backend-dynamic
+    disabled: false
+    pluginConfig:
+      extensions:
+        installation:
+          enabled: true
+          saveToSingleFile:
+            file: /opt/app-root/src/configs/dynamic-plugins/dynamic-plugins.override.yaml
+
+  # Feedback TAB integration
+  - package: '@janus-idp/backstage-plugin-feedback-backend-dynamic'
+    integrity: 'sha256-uYJ0EeBZUgntaELJLxs4ArKZD7W7HTuTCFnImFayrBY='
+    disabled: true  # viewDocs external route must be bound; TechDocs target not available in dynamic setup
+    pluginConfig:
+      feedback:
+        # A ref to base entity under which global feedbacks gets stored
+        # in format: kind:namespace/name
+        baseEntityRef: 'system:default/red-hat-developer-hub' # This entity needs 2 annotations adding!
+        summaryLimit: 240
+        integrations:
+          jira:
+            - host: 'https://issues.redhat.com'
+              token: Bearer testtest
+          email:
+            host: ${EMAIL_HOSTNAME}
+            port: ${EMAIL_PORT} #587
+            from: ${EMAIL_SENDER}
+            auth:
+              user: ${EMAIL_USER}
+              password: ${EMAIL_PASSWORD}
+            secure: false # bypass the self-signed certs for the smtp host
+  - package: '@janus-idp/backstage-plugin-feedback'
+    integrity: 'sha256-6tzhUe0U13JU833yXw0zsaP+CtnwTz6LwWLfUTAVWFQ='
+    disabled: true  # viewDocs external route must be bound; TechDocs target not available in dynamic setup
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          janus-idp.backstage-plugin-feedback:
+            appIcons:
+              - name: feedbackIcon
+                importName: FeedbackIcon
+            dynamicRoutes:
+              - path: /feedback
+                importName: GlobalFeedbackPage
+                menuItem:
+                  icon: feedbackIcon
+                  text: Feedback
+            # routeBindings removed: viewDocs was required but not provided (TechDocs route binding), which caused "External route viewDocs is required but was not provided"
+            entityTabs:
+              - path: '/feedback'
+                title: Feedback
+                mountPoint: entity.page.feedback
+            mountPoints:
+              - mountPoint: entity.page.feedback/cards
+                importName: EntityFeedbackPage
+                config:
+                  layout:
+                    gridColumn: "1 / -1"
+                  if:
+                    anyOf:
+                      - hasAnnotation: feedback/type
+
+  # Notifications - New in 1.4
+  - package: ./dynamic-plugins/dist/backstage-plugin-signals-backend-dynamic
+    disabled: false
+  - package: ./dynamic-plugins/dist/backstage-plugin-signals
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage.plugin-signals: {}
+  - package: ./dynamic-plugins/dist/backstage-plugin-notifications
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          backstage.plugin-notifications:
+            dynamicRoutes:
+              - importName: NotificationsPage
+                menuItem:
+                  config:
+                    props:
+                      titleCounterEnabled: true
+                      webNotificationsEnabled: false
+                  importName: NotificationsSidebarItem
+                path: /notifications
+  - package: ./dynamic-plugins/dist/backstage-plugin-notifications-backend-dynamic
+    disabled: false
+  - package: ./dynamic-plugins/dist/backstage-plugin-notifications-backend-module-email-dynamic
+    disabled: false
+    pluginConfig:
+      notifications:
+        processors:
+          email:
+            transportConfig:
+              transport: smtp
+              hostname: ${EMAIL_HOSTNAME}
+              port: ${EMAIL_PORT} #587
+              username: ${EMAIL_USER}
+              password: ${EMAIL_PASSWORD}
+            sender: ${EMAIL_SENDER}
+            broadcastConfig:
+              receiver: 'users'
+
+  # Orchestrator plugins -- enable and configure dataIndexService URL for sonataflow
+  - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator:{{inherit}}'
+    disabled: false
+  - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator-backend:{{inherit}}'
+    disabled: false
+    pluginConfig:
+      orchestrator:
+        dataIndexService:
+          url: http://sonataflow:8899
+  - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-scaffolder-backend-module-orchestrator:{{inherit}}'
+    disabled: false
+    pluginConfig:
+      orchestrator:
+        dataIndexService:
+          url: http://sonataflow:8899
+  - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator-form-widgets:{{inherit}}'
+    disabled: false
+
+  # Icon Viewer - browse all available Backstage icons
+  - package: 'oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/proberaum-backstage-plugin-icon-viewer:bs_1.45.3__0.2.0'
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          proberaum.backstage-plugin-icon-viewer:
+            translationResources:
+              - importName: iconViewerTranslations
+                ref: iconViewerTranslationRef
+            dynamicRoutes:
+              - path: /icon-viewer
+                importName: IconViewerPage
+                menuItem:
+                  icon: extension
+                  text: Icon viewer
+
+  # Scorecard -- project health metrics (GitHub + Jira)
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scorecard:bs_1.45.3__2.3.5!red-hat-developer-hub-backstage-plugin-scorecard
+    disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          red-hat-developer-hub.backstage-plugin-scorecard:
+            entityTabs:
+              - path: '/scorecard'
+                title: Scorecard
+                mountPoint: entity.page.scorecard
+            mountPoints:
+              - mountPoint: entity.page.scorecard/cards
+                importName: EntityScorecardContent
+                config:
+                  layout:
+                    gridColumn: 1 / -1
+                  if:
+                    allOf:
+                      - isKind: component
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scorecard-backend:bs_1.45.3__2.3.5!red-hat-developer-hub-backstage-plugin-scorecard-backend
+    disabled: false
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scorecard-backend-module-github:bs_1.45.3__2.3.5!red-hat-developer-hub-backstage-plugin-scorecard-backend-module-github
+    disabled: false
+  - package: oci://ghcr.io/redhat-developer/rhdh-plugin-export-overlays/red-hat-developer-hub-backstage-plugin-scorecard-backend-module-jira:bs_1.45.3__2.3.5!red-hat-developer-hub-backstage-plugin-scorecard-backend-module-jira
+    disabled: false

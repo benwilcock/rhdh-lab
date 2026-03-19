@@ -1,0 +1,27 @@
+# Compose override for RHDH Local customizations
+# This file is copied to rhdh-local/ by apply-customizations.sh and is
+# automatically merged by Podman/Docker Compose.
+#
+# Purpose: Add additional services and network configuration to the RHDH stack.
+# Services defined here share the same Docker network, enabling direct
+# container-to-container communication via DNS (using service/container names).
+
+services:
+  rhdh:
+    depends_on:
+      - jenkins
+    volumes:
+      - ./configs/translations:/opt/app-root/src/translations:z
+
+  jenkins:
+    container_name: jenkins
+    image: jenkins/jenkins:lts-jdk21
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - 8567:8080    # Web UI (external:internal)
+      - 50000:50000  # Agent communication
+    volumes:
+      - /Users/bwilcock/Code/container-services/jenkins/config:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock

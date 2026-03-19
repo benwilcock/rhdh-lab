@@ -1,0 +1,343 @@
+# Copy this file to app-config.local.yaml to override default app settings.
+# Example with GitHub integration referencing external secrets file.
+auth:
+  environment: development # Use 'production' to disable Guest login
+  providers:
+    github:
+      development: # Development environment
+        clientId: ${AUTH_GITHUB_CLIENT_ID}
+        clientSecret: ${AUTH_GITHUB_CLIENT_SECRET}
+        signIn: 
+          resolvers: # This is the resolver that will be used to match the GitHub username with the user entity in the catalog
+            - resolver: usernameMatchingUserEntityName
+        # Enable GitHub as sign-in provider (uncomment to make GitHub the primary auth)
+        # signInPage: github
+
+permission:
+  enabled: true
+  rbac:
+    admin:
+      superUsers:
+        - name: user:default/benwilcock
+      users: 
+        - name: user:default/benwilcock
+      pluginsWithPermission:
+        - catalog
+        - scaffolder
+        - permission
+        - extensions
+        - scorecard
+
+integrations:
+  github: # GitHub integration configuration
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+      apps:
+        - $include: ../extra-files/github-app-credentials.yaml # Include the GitHub App credentials file
+    # Parasol Insurance internal GitHub Enterprise (fictional -- suppresses SCM auth warnings for parasol-catalog entities)
+    - host: github.parasol.com
+      apiBaseUrl: https://github.parasol.com/api/v3
+      token: parasol-fictional-catalog-placeholder
+
+app:
+  title: "RHDH - All your base are belong to us!"
+  baseUrl: ${BASE_URL}
+  # branding: uses RHDH built-in defaults (no overrides)
+  # To customize, see: https://docs.redhat.com/en/documentation/red_hat_developer_hub/1.6/html/customizing_red_hat_developer_hub/customizing-appearance
+  analytics:
+    adoptionInsights:
+      maxBufferSize: 25
+      flushInterval: 6000
+      debug: true # enable this to debug
+      licensedUsers: 5
+
+backend:
+  # Allow the catalog PlaceholderProcessor to fetch external OpenAPI spec definitions
+  # via $text substitution in API entity YAML files.
+  reading:
+    allow:
+      - host: raw.githubusercontent.com
+      - host: api.qdrant.tech
+      - host: www.keycloak.org
+  listen:
+    port: 7007
+  baseUrl: ${BASE_URL} # Set the preferred base URL to match your DNS record (e.g. https://rhdh.wibbles.duckdns.org). Omit backend.https so the backend serves HTTP (Caddy/reverse proxy terminates TLS).
+  cors:
+    origin: ${BASE_URL}
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  csp:
+    upgrade-insecure-requests: false
+    connect-src: ["'self'", 'http:', 'https:'] # ["'self'", "unsafe-eval", 'http:', 'https:']
+    frame-src:
+      - https://www.youtube.com
+    img-src: ["'self'", "unsafe-eval", 'data:', 'http:', 'https:']
+  # comment out the following 'database' section to use the PostgreSQL database
+  database:
+    client: better-sqlite3
+    connection: ':memory:'
+  auth:
+    # backend.auth.keys removed (deprecated; was causing console warnings)
+    # MCP external access: uncomment and set MCP_TOKEN in .env when using MCP clients.
+    # Without MCP_TOKEN set, the backend fails to start if this block is present.
+    # externalAccess:
+    #   - type: static
+    #     options:
+    #       token: ${MCP_TOKEN}
+    #       subject: mcp-clients
+  actions:
+    pluginSources:
+      - software-catalog-mcp-tool
+      - techdocs-mcp-tool
+
+
+catalog: # You can use local files from catalog-entities directory to load entities into the catalog
+  providers: # Ingest users and projects from the GitHub Org
+    github:
+      providerId:
+        organization: "${GITHUB_ORG}"
+        schedule:
+          frequency:
+            minutes: 30
+          initialDelay:
+            seconds: 15
+          timeout:
+            minutes: 15
+    githubOrg:
+      - id: organization
+        githubUrl: "${GITHUB_HOST_DOMAIN}"
+        orgs: [ "${GITHUB_ORG}" ]
+        schedule:
+          frequency:
+            minutes: 30
+          initialDelay:
+            seconds: 15
+          timeout:
+            minutes: 15
+
+  # Speed up the metadata refresh interval (when testing)
+  processingInterval: { seconds: 60 }
+  rules:
+    - allow: [Component, API, Location, Template, Domain, User, Group, System, Resource, Plugin, Package] # Permissive entity rules
+
+  locations:
+    # Load the RHDH Local catalog entry (System)
+    - type: file
+      target: /opt/app-root/src/catalog-info.yaml
+    # Load the RHDH Local default users and groups
+    - type: file
+      target: /opt/app-root/src/configs/catalog-entities/users.yaml
+      rules:
+        - allow: [User, Group]
+    # Load custom user overrides (GitHub auth requires matching User entities)
+    - type: file
+      target: /opt/app-root/src/configs/catalog-entities/users.override.yaml
+      rules:
+        - allow: [User, Group]
+    # Enterprise OSS catalog (GitHub) -- comment out to exclude from this demo environment.
+    # Source: https://github.com/benwilcock/backstage-catalogs/blob/main/enterprise-catalog-index.yaml
+    - type: url
+      target: https://github.com/benwilcock/backstage-catalogs/blob/main/enterprise-catalog-index.yaml
+      rules:
+        - allow: [Location]
+    # Parasol Insurance fictional catalog (GitHub) -- comment out to exclude from this demo environment.
+    # Source: https://github.com/benwilcock/backstage-catalogs/blob/main/parasol-catalog-index.yaml
+    - type: url
+      target: https://github.com/benwilcock/backstage-catalogs/blob/main/parasol-catalog-index.yaml
+      rules:
+        - allow: [Location]
+    # Load Frontend Dynamic Plugin Software Template.
+    # Using this template in RHDH requires GitHub integration to be set up.
+    - type: url
+      target: https://github.com/redhat-developer/red-hat-developer-hub-software-templates/blob/main/templates/create-frontend-plugin/template.yaml
+      rules:
+        - allow: [Template]
+    # Load Backend Dynamic Plugin Software Template.
+    # Using this template in RHDH requires GitHub integration to be set up.
+    - type: url
+      target: https://github.com/redhat-developer/red-hat-developer-hub-software-templates/blob/main/templates/create-backend-plugin/template.yaml
+      rules:
+        - allow: [Template]
+    # Load 'Create Tech Docs' Software Template
+    # Using this template in RHDH requires GitHub integration to be set up.
+    - type: url
+      target: https://github.com/redhat-developer/red-hat-developer-hub-software-templates/blob/main/templates/github/techdocs/template.yaml
+      rules:
+        - allow: [Template]
+    # Load 'Register Existing Component to Catalog' Software Template.
+    # Using this template in RHDH requires GitHub integration to be set up.
+    - type: url
+      target: https://github.com/redhat-developer/red-hat-developer-hub-software-templates/blob/main/templates/github/register-component/template.yaml
+      rules:
+        - allow: [Template]
+
+    # My RHDH TechDocs (Local files)
+    # - type: file
+    #   target: /opt/app-root/src/techdocs/rhdh-catalog-info.yaml
+        
+    # Red Hat developer Hub
+    #- type: url
+      #target: https://github.com/redhat-developer/rhdh/blob/main/catalog-info.yaml
+
+    ## AI-Powered Customer Service Platform Components
+    ## Filter for System: AI-Powered Customer Service Platform
+    - type: url
+      target: https://github.com/evanshortiss/from-ai-hype-to-platform-reality/blob/main/catalog/catalog-info.yaml
+
+    # RHDH Software Templates
+    #- type: url
+      #target: https://github.com/redhat-developer/red-hat-developer-hub-software-templates/blob/main/templates.yaml 
+ 
+    # Load the 2024 AI Model Catalog Sample
+    - type: url
+      target: https://github.com/redhat-ai-dev/model-catalog/blob/main/ollama-model-service/catalog-info.yaml
+    - type: url
+      target: https://github.com/redhat-ai-dev/model-catalog/blob/main/developer-model-service/catalog-info.yaml
+
+    # Parasol Catalog Samples
+    #- type: url
+    # target: https://github.com/rhdh-demo-gh/catalog-info/blob/main/locations.yaml
+    #- type: url
+    # target: https://github.com/rhdh-demo-gh/parasol-web/blob/main/catalog-info.yaml
+    #- type: url
+    # target: https://github.com/rhdh-demo-gh/parasol-store/blob/main/catalog-info.yaml
+    #- type: url
+    # target: https://github.com/rhdh-demo-gh/parasol-store-db/blob/main/catalog-info.yaml
+    #- type: url
+    # target: https://github.com/rhdh-demo-gh/techdocs/blob/main/catalog-info.yaml
+    #- type: url
+    # target: https://github.com/rhdh-demo-gh/parasol-store/blob/main/catalog-info.yaml
+    # - type: url
+    #   target: https://github.com/redhat-gpe/rhdh-demo-entities/blob/main/locations.yaml # Evan
+
+    # Load the RHDH AI Templates
+    - type: url
+      target: https://github.com/Jdubrick/ai-lab-template/blob/rhdhpai-814-techdoc-overhaul/all.yaml
+      #target: https://github.com/redhat-ai-dev/ai-lab-template/blob/main/all.yaml
+      #target: https://github.com/redhat-ai-dev/ai-lab-template/blob/v0.9.1/all.yaml
+
+    # Load my Jenkins projects
+    - type: url
+      target: https://github.com/benwilcock-org/springboot-maven/blob/main/catalog-info.yaml 
+    - type: url
+      target: https://github.com/benwilcock/springboot-djl-demo/blob/main/catalog-info.yml
+
+    # Extensions Plugin needs this target to pull in the information about Plugins
+    # - type: file
+    #   target: /marketplace/catalog-entities/plugins/all.yaml
+    #   rules:
+    #     - allow: [Location, Plugin]
+    # - type: file
+    #   target: /marketplace/catalog-entities/packages/all.yaml
+    #   rules:
+    #     - allow: [Location, Package]
+
+techdocs:
+  generator:
+    runIn: local
+  builder: local
+  publisher:
+    type: local
+    local:
+      publishDirectory: /tmp/techdocs
+  sanitizer:
+    allowedIframeHosts:
+      - www.youtube.com # Allows embedding of YouTube videos in TechDocs
+
+proxy:
+  endpoints:
+    '/quay/api':
+      target: 'https://quay.io'
+      credentials: require
+      headers:
+        X-Requested-With: 'XMLHttpRequest'
+        # Uncomment and use the Authorization header below to access a private Quay
+        # Repository using a token. Refer to the "Applications and Tokens" section
+        # at https://docs.quay.io/api/ to find the instructions to generate a token
+        # Authorization: 'Bearer <YOUR TOKEN>'
+      changeOrigin: true
+      # Change to "false" in case of using self hosted quay instance with a self-signed certificate
+      secure: true
+    '/ai-rssfeed':
+      target: "https://news.mit.edu/rss/topic/artificial-intelligence2" # https://github.com/vishalshar/awesome_ML_AI_RSS_feed?tab=readme-ov-file
+      changeOrigin: true
+      followRedirects: true
+
+quay:
+  # The BASE url for the Quay service, used to generate the link to Quay
+  uiUrl: 'https://quay.io'
+
+# Marketplace Plugin - editable Configuration (commented in default):
+# red-hat-developer-hub.backstage-plugin-marketplace:
+    #   appIcons:
+    #     - name: marketplace
+    #       importName: MarketplaceIcon
+    #   dynamicRoutes:
+    #     - path: /extensions/catalog
+    #       importName: DynamicMarketplacePluginRouter
+    #   mountPoints:
+    #     - mountPoint: application/provider
+    #       importName: InstallationContextProvider
+    #     - mountPoint: internal.plugins/tab
+    #       importName: DynamicMarketplacePluginContent
+    #       config:
+    #         path: extensions
+    #         title: Catalog
+
+dynamicPlugins:
+  frontend:
+    default.main-menu-items:
+      menuItems:
+        default.my-group:
+          enabled: false
+
+buildInfo:
+  title: 'RHDH Version Info'
+  card:
+    TechDocs builder: 'local'
+    Authentication provider: 'GitHub (Org)'
+    RBAC: enabled
+  full: false
+
+i18n: # Localisation & translation settings. Translation JSON files are mounted at /opt/app-root/src/translations/ via compose.override.yaml volume mount.
+  locales: # List of supported locales. Must include en, otherwise the translation framework will fail to load.
+    - en
+    - fr
+    - ja
+    - it
+  defaultLocale: en # Optional. Defaults to en if not specified.
+
+jira:
+  baseUrl: ${JIRA_BASE_URL}
+  token: ${JIRA_TOKEN}
+  product: cloud # Change to 'datacenter' if using Jira Data Center
+
+scorecard:
+  plugins:
+    github:
+      open_prs:
+        thresholds:
+          rules:
+            - key: success
+              expression: '<10'
+            - key: warning
+              expression: '10-50'
+            - key: error
+              expression: '>50'
+    jira:
+      open_issues:
+        options:
+          mandatoryFilter: resolution = Unresolved
+        thresholds:
+          rules:
+            - key: success
+              expression: '<500'
+            - key: warning
+              expression: '500-2000'
+            - key: error
+              expression: '>2000'
+# ── Tech Radar ─────────────────────────────────────────────────────────────────
+# Custom Red Hat & IBM Tech Radar data, hosted in the backstage-catalogs repo.
+# Requires the backstage-community-plugin-tech-radar-backend-dynamic plugin.
+techRadar:
+  url: https://github.com/benwilcock/backstage-catalogs/blob/main/tech-radar-data.json

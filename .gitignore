@@ -1,0 +1,15 @@
+# Secrets -- NEVER commit real credentials
+rhdh-customizations/.env
+rhdh-customizations/configs/extra-files/github-app-credentials.yaml
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+
+# Backups (large archives)
+*.tar.gz
+
+# Cursor AI context (personal to each user)
+.cursor/
