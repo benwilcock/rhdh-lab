@@ -22,6 +22,7 @@ Together, rules and skills give an AI assistant deep project-specific knowledge 
 | `common-workflows.mdc` | Manual | Step-by-step recipes for common tasks: add a plugin, change config, update rhdh-local, test pristine mode, add external services, share setup, view logs, troubleshoot. |
 | `always-document.mdc` | Manual | Documentation standards: when to document, what to document, where documentation lives, quality standards, and anti-patterns. |
 | `shell-scripts.mdc` | Auto when editing `**/*.sh` | Shell script standards: error handling, runtime compatibility (Podman/Docker), output conventions, and script reference. |
+| `git-github.mdc` | Always active | Git and GitHub conventions: commit message standards, noreply email protection, secret safety checks before commits, submodule awareness, and force push guardrails. |
 
 ## Skills
 

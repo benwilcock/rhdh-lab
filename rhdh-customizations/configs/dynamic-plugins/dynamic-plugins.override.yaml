@@ -157,9 +157,6 @@ plugins:
         baseEntityRef: 'system:default/red-hat-developer-hub' # This entity needs 2 annotations adding!
         summaryLimit: 240
         integrations:
-          jira:
-            - host: 'https://issues.redhat.com'
-              token: ${JIRA_TOKEN}
           email:
             host: ${EMAIL_HOSTNAME}
             port: ${EMAIL_PORT} #587

@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+
+# Git & GitHub Conventions
+
+## Commit Messages
+
+Write clear, detailed commit messages that explain **why** the change was made, not just what changed.
+
+### Format
+
+```
+<short summary in imperative mood, max ~72 chars>
+
+<optional body: explain motivation, context, trade-offs, or anything
+non-obvious about the change. Wrap lines at ~72 chars.>
+```
+
+### Guidelines
+
+- Use imperative mood: "Add feature" not "Added feature" or "Adds feature"
+- First line is a concise summary; add a blank line then a body for anything non-trivial
+- Reference related docs or issues when relevant (e.g. "See docs/architecture.md")
+- Group related changes into a single commit; separate unrelated changes into distinct commits
+
+## Email & Identity
+
+This repository uses a GitHub noreply email to keep the author's personal email private.
+
+- **NEVER** change `user.email` in git config
+- **NEVER** use a personal email address in commits
+- The repo-level config is already set; do not override it
+
+## Secret Safety
+
+Before every commit:
+
+1. Run `git diff --staged` and review for secrets, credentials, personal paths, or tokens
+2. **NEVER** commit files matching: `.env`, `*-credentials.yaml`, `*.pem`, `*.key`
+3. **NEVER** commit hardcoded passwords, API keys, tokens, or personal absolute paths (e.g. `/Users/...`, `/home/...`)
+4. Use `${ENV_VAR}` references for all secrets; set real values only in the gitignored `.env`
+5. If in doubt, check `.gitignore` covers the file before staging
+
+## Submodule: rhdh-local
+
+- `rhdh-local/` is a git submodule tracking the upstream RHDH Local project
+- `modified: rhdh-local (untracked content)` in `git status` is **normal** -- do not try to fix it
+- **NEVER** stage or commit changes inside `rhdh-local/`
+- To update the submodule: `cd rhdh-local && git pull && cd ..`
+
+## Force Push
+
+- **NEVER** force push to `main` unless the user explicitly requests it
+- When rewriting history (e.g. email changes, squashing), always use `--force-with-lease` first; only fall back to `--force` if lease fails due to the rewrite itself
