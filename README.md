@@ -25,7 +25,7 @@ cd rhdh-lab
 cp rhdh-customizations/.env.example rhdh-customizations/.env
 ```
 
-Edit `rhdh-customizations/.env` and fill in your credentials (GitHub OAuth, email, etc.). See the comments in `.env.example` for guidance on each variable.
+Edit `rhdh-customizations/.env` and fill in your credentials (GitHub OAuth, email, etc.). See the comments in `.env.example` for guidance on each variable. For a full walkthrough, see the [Customization Guide](docs/customization-guide.md).
 
 ### 3. Start RHDH
 
@@ -59,10 +59,11 @@ rhdh-lab/
 
 ## What's Included
 
-- **Lifecycle scripts** (`up.sh`, `down.sh`) -- start and stop RHDH with interactive or non-interactive modes, supporting baseline, Lightspeed, and Orchestrator configurations
-- **Copy-sync customization system** -- keeps your configuration separate from the upstream project for conflict-free updates
-- **Plugin management** -- pre-configured dynamic plugins for GitHub, Jenkins, RBAC, TechDocs, notifications, scorecards, and more
-- **Backup and restore** (`backup.sh`) -- portable archives of your setup
+- **[Lifecycle scripts](docs/scripts.md)** (`up.sh`, `down.sh`) -- start and stop RHDH with interactive or non-interactive modes, supporting baseline, Lightspeed, and Orchestrator configurations
+- **[Copy-sync customization system](docs/architecture.md)** -- keeps your configuration separate from the upstream project for conflict-free updates
+- **[Plugin management](docs/baseline-configuration.md)** -- pre-configured dynamic plugins for GitHub, Jenkins, RBAC, TechDocs, notifications, scorecards, and more
+- **[Backup and restore](docs/backup.md)** (`backup.sh`) -- portable archives of your setup
+- **[AI coding assistant rules and skills](docs/cursor-rules-and-skills.md)** -- structured guidance in `.cursor/rules/` and `.cursor/skills/` that teaches AI assistants the project's architecture, workflows, and constraints
 
 ## Common Commands
 
@@ -89,6 +90,7 @@ See the [docs/](docs/README.md) folder for detailed guides:
 - [Testing Guide](docs/testing.md) -- workflows for customized and pristine modes
 - [Baseline Configuration](docs/baseline-configuration.md) -- all enabled plugins and settings
 - [Jenkins Integration](docs/jenkins-integration.md) -- Jenkins CI/CD setup
+- [Cursor Rules and Skills](docs/cursor-rules-and-skills.md) -- AI assistant guidance for this project
 
 ## Updating RHDH Local
 
