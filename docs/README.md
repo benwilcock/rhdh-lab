@@ -14,6 +14,7 @@ Comprehensive guides for setting up, customizing, and operating rhdh-lab.
 | [Testing Guide](testing.md) | Testing workflows for customized and pristine modes |
 | [Baseline Configuration](baseline-configuration.md) | Reference of all enabled plugins and configuration |
 | [Jenkins Integration](jenkins-integration.md) | Jenkins CI/CD setup within the RHDH compose stack |
+| [Cursor Rules and Skills](cursor-rules-and-skills.md) | AI assistant rules and skills shipped with the project |
 
 ## Quick Links
 

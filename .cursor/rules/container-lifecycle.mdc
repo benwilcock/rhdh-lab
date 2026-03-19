@@ -1,0 +1,94 @@
+---
+description: "Container lifecycle management with up.sh and down.sh scripts, network namespace sharing, and compose file merging for RHDH Local"
+alwaysApply: false
+---
+
+# Container Lifecycle Management
+
+## ALWAYS Use the Provided Scripts
+
+The workspace provides `up.sh` and `down.sh` scripts that MUST be used for starting and stopping containers.
+
+### Starting Containers
+
+```bash
+./up.sh                              # Interactive mode
+./up.sh --customized                 # With customizations
+./up.sh --baseline                   # Pristine RHDH
+./up.sh --customized --lightspeed   # With Lightspeed
+./up.sh --customized --orchestrator # With Orchestrator
+./up.sh --customized --both --ollama # Everything enabled
+./up.sh --customized --follow-logs  # Tail logs after startup
+```
+
+### Stopping Containers
+
+```bash
+./down.sh                            # Interactive mode
+./down.sh --keep-volumes             # Keep data for fast restart
+./down.sh --volumes                  # Remove all data (clean slate)
+```
+
+`down.sh` always removes customization copies from `rhdh-local/` (restores pristine state). Reapply before next start: `cd rhdh-customizations && ./apply-customizations.sh`
+
+## Network Namespace Sharing (CRITICAL)
+
+Several containers use `network_mode: "service:rhdh"`, sharing RHDH's network namespace:
+
+- `lightspeed-core-service` (port 8080)
+- `llama-stack` (port 8321)
+
+**Why this matters:**
+
+- When RHDH restarts, it gets a NEW network namespace
+- Containers in `network_mode: "service:rhdh"` stay in the OLD namespace
+- Result: 504 Gateway Timeout errors -- containers appear "running" but are unreachable
+- Solution: ALWAYS restart ALL containers together using scripts
+
+## FORBIDDEN Operations
+
+```bash
+# NEVER do this when orchestrator/lightspeed are enabled:
+podman compose restart rhdh
+podman compose restart lightspeed-core-service
+podman compose down && podman compose up -d
+podman compose -f compose.yaml -f orchestrator/compose.yaml restart
+```
+
+## REQUIRED Operations
+
+```bash
+# ALWAYS do this instead:
+./down.sh
+./up.sh --customized --both --ollama  # Adjust flags as needed
+```
+
+**Exception**: If running ONLY base RHDH (no lightspeed, no orchestrator), direct `podman compose restart rhdh` is acceptable for config-only changes.
+
+## Services
+
+- `install-dynamic-plugins` -- Plugin installation (runs once, independent network)
+- `rhdh` -- Main RHDH application (owns the network namespace)
+- `lightspeed-core-service` -- AI assistant (shares RHDH's namespace)
+- `llama-stack` -- LLM inference (shares RHDH's namespace)
+- `sonataflow` -- Workflow engine (independent network)
+- `ollama` -- Local LLM runtime (independent network)
+
+## Startup Flow
+
+1. `install-dynamic-plugins` runs `prepare-and-install-dynamic-plugins.sh`
+2. Plugin configuration files are generated
+3. `rhdh` waits for plugin installation to complete
+4. `rhdh` runs `wait-for-plugins-and-start.sh`, applies overrides, starts Backstage
+5. Network-sharing containers attach to RHDH's namespace
+
+## Compose File Merging
+
+- `compose.yaml` -- base configuration (always loaded)
+- `compose.override.yaml` -- automatically merged by Docker/Podman Compose
+- `up.sh` handles correct merging of all compose files (base + override + lightspeed + orchestrator)
+
+## Volume Mounts
+
+- Respect SELinux contexts (`:Z` suffix for bind mounts on SELinux systems)
+- Test both relative and absolute paths

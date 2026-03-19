@@ -11,5 +11,8 @@ rhdh-customizations/configs/extra-files/github-app-credentials.yaml
 # Backups (large archives)
 *.tar.gz
 
-# Cursor AI context (personal to each user)
-.cursor/
+# Cursor AI -- track rules and skills, ignore personal settings
+.cursor/mcp.json
+.cursor/mcp/
+.cursor/projects/
+.cursor/plans/

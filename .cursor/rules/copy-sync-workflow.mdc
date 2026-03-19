@@ -1,0 +1,129 @@
+---
+description: "Rules for editing configuration files and managing the copy-sync system between rhdh-customizations/ and rhdh-local/"
+globs:
+  - "rhdh-customizations/**"
+alwaysApply: false
+---
+
+# Copy-Sync Customization Workflow
+
+## How the System Works
+
+`rhdh-customizations/` is the single source of truth for all configuration customizations. The `apply-customizations.sh` script **copies** these files into `rhdh-local/` so containers can read them from their expected mounted paths. After editing any customization file, you must re-run this script to sync.
+
+## File Mapping
+
+Source (in `rhdh-customizations/`) --> Destination (copied to `rhdh-local/`):
+
+- `compose.override.yaml` --> `compose.override.yaml` (Compose overrides: extra services, extra_hosts)
+- `.env` --> `.env` (Environment variable overrides)
+- `configs/app-config/app-config.local.yaml` --> `configs/app-config/app-config.local.yaml` (App config overrides)
+- `configs/dynamic-plugins/dynamic-plugins.override.yaml` --> `configs/dynamic-plugins/dynamic-plugins.override.yaml` (Plugin overrides)
+- `developer-lightspeed/configs/app-config/app-config.lightspeed.local.yaml` --> `developer-lightspeed/configs/app-config/app-config.lightspeed.local.yaml` (Lightspeed config)
+- `configs/catalog-entities/*.override.yaml` --> `configs/catalog-entities/*.override.yaml` (Catalog entity overrides, e.g. custom users for GitHub auth)
+- `configs/extra-files/*` --> `configs/extra-files/*` (Additional config, e.g. github-app-credentials.yaml)
+
+## File Purposes
+
+- `.env` -- Environment variables (overrides `rhdh-local/default.env`)
+- `compose.override.yaml` -- Docker Compose services, ports, volumes, extra_hosts
+- `configs/app-config/app-config.local.yaml` -- RHDH application configuration
+- `configs/dynamic-plugins/dynamic-plugins.override.yaml` -- Plugin enablement and configuration
+- `developer-lightspeed/configs/app-config/app-config.lightspeed.local.yaml` -- Lightspeed AI assistant config
+- `configs/extra-files/github-app-credentials.yaml` -- GitHub App authentication credentials
+
+## Configuration Layers
+
+- **Layer 1 (Defaults)**: `rhdh-local/` version-controlled files (`default.env`, `app-config.yaml`, `dynamic-plugins.default.yaml`)
+- **Layer 2 (Overrides)**: Files copied from `rhdh-customizations/` (`.env`, `app-config.local.yaml`, `dynamic-plugins.override.yaml`)
+- **Layer 3 (Examples)**: `*.example.yaml` templates in `rhdh-local/` for reference
+
+## The Standard Workflow
+
+```bash
+# 1. Edit customizations (always in rhdh-customizations/)
+code rhdh-customizations/configs/app-config/app-config.local.yaml
+
+# 2. Sync copies into rhdh-local
+cd rhdh-customizations && ./apply-customizations.sh
+
+# 3. Restart containers using scripts
+cd .. && ./down.sh && ./up.sh --customized --both --ollama
+```
+
+## Configuration Examples
+
+### Environment Variables
+
+```bash
+# Override default values by setting them in .env
+# Don't modify rhdh-local/default.env
+RHDH_IMAGE=quay.io/rhdh-community/rhdh:latest
+LOG_LEVEL=debug
+```
+
+### Plugin Configuration
+
+```yaml
+# In dynamic-plugins.override.yaml:
+includes:
+  - dynamic-plugins.default.yaml  # Load defaults first
+
+plugins:
+  - package: ./local-plugins/my-plugin
+    disabled: false
+```
+
+### App Configuration
+
+```yaml
+# In app-config.local.yaml, override specific values:
+backend:
+  database:
+    connection:
+      host: postgres
+      port: 5432
+```
+
+## NEVER Do This
+
+- Modify files directly in `rhdh-local/` for customization purposes
+- Manually copy files from `rhdh-customizations/` into `rhdh-local/` (use `apply-customizations.sh`)
+- Commit files matching: `*.local.yaml`, `*.override.yaml`, `.env` to the rhdh-local repository
+- Edit the copied customization files in `rhdh-local/` (edit the source in `rhdh-customizations/` instead)
+- Suggest editing default configurations in `rhdh-local/` for user customization
+
+## ALWAYS Do This
+
+- Edit customization files in `rhdh-customizations/` directory
+- Run `apply-customizations.sh` after every edit to sync copies
+- Run `remove-customizations.sh` to test pristine state
+- Respect `.gitignore` patterns in `rhdh-local/.gitignore`
+- Verify pristine state: `cd rhdh-local && git status` shows "working tree clean"
+
+## Important Notes
+
+- Never commit `*.local.yaml`, `*.override.yaml`, or `.env` to the `rhdh-local` repository (they're gitignored there)
+- These files can be version controlled independently in `rhdh-customizations/`
+- Use `backup.sh` to create portable archives of your customizations
+- The `remove-customizations.sh` script removes copies from `rhdh-local/` but never touches source files here
+- Scripts: `apply-customizations.sh` and `remove-customizations.sh` are the ONLY way to manage customizations in `rhdh-local/`
+
+## Configuration Change Quick Reference
+
+What to edit and where:
+
+- **App config**: `rhdh-customizations/configs/app-config/app-config.local.yaml`
+- **Plugins**: `rhdh-customizations/configs/dynamic-plugins/dynamic-plugins.override.yaml`
+- **Environment**: `rhdh-customizations/.env`
+- **Compose services**: `rhdh-customizations/compose.override.yaml`
+- **Lightspeed config**: `rhdh-customizations/developer-lightspeed/configs/app-config/app-config.lightspeed.local.yaml`
+- **Credentials**: `rhdh-customizations/configs/extra-files/github-app-credentials.yaml`
+
+All changes require: `apply-customizations.sh` --> `./down.sh` --> `./up.sh --customized [flags]`
+
+## Git and Version Control
+
+- `rhdh-local/` must always show clean git status (customization copies are gitignored)
+- `rhdh-customizations/` can optionally be version controlled independently
+- Update from upstream: `./down.sh` --> `cd rhdh-local && git pull` --> `cd ../rhdh-customizations && ./apply-customizations.sh` --> `cd .. && ./up.sh --customized [flags]`

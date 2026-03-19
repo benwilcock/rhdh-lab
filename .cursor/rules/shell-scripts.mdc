@@ -1,0 +1,44 @@
+---
+globs:
+  - "**/*.sh"
+alwaysApply: false
+---
+
+# Shell Script Standards
+
+## General Requirements
+
+- Use `set -euo pipefail` at the top of scripts
+- Maintain backward compatibility when modifying existing scripts
+- Test with both Podman (`podman compose`) and Docker (`docker compose`)
+- Document any breaking changes in commit messages and relevant docs
+- Follow the existing color-coded output convention (RED=errors, GREEN=success, YELLOW=warnings, BLUE=info)
+
+## Key Scripts Reference
+
+### Workspace Root
+
+- `up.sh` -- Start RHDH with various configurations (modes, components, flags)
+- `down.sh` -- Stop all containers, optionally remove volumes, always removes customization copies
+- `backup.sh` -- Create portable backup archive of customizations and workspace files
+
+### rhdh-customizations/
+
+- `apply-customizations.sh` -- Copy customization files into `rhdh-local/` (run after every edit)
+- `remove-customizations.sh` -- Remove customization copies from `rhdh-local/` (restore pristine state)
+
+### rhdh-local/ (PRISTINE -- do not modify unless contributing upstream)
+
+- `wait-for-plugins-and-start.sh` -- RHDH entrypoint: waits for plugins, merges config, starts Backstage
+- `prepare-and-install-dynamic-plugins.sh` -- Plugin installer entrypoint: links config, runs install
+
+### rhdh-local/developer-lightspeed/scripts/
+
+- `start-lightspeed.sh` -- Interactive Lightspeed setup and startup
+- `stop-lightspeed.sh` -- Stop Lightspeed containers
+
+## When Modifying Scripts
+
+- Update the script's header comment block to reflect changes
+- If changing `up.sh` or `down.sh` flags, update `docs/scripts.md` and `docs/quick-reference.md`
+- Ensure SELinux-safe bind mounts (`:Z` suffix) where needed

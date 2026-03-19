@@ -1,0 +1,42 @@
+---
+globs:
+  - "rhdh-local/**"
+alwaysApply: false
+---
+
+# rhdh-local/ Directory Protection
+
+## This Directory is PRISTINE -- Do Not Modify
+
+The `rhdh-local/` directory contains the official RHDH Local project cloned from `https://github.com/redhat-developer/rhdh-local.git`. It must remain unmodified to allow clean `git pull` updates.
+
+## Rules
+
+- **NEVER** edit files in this directory for customization purposes
+- **NEVER** create new configuration files here (use `rhdh-customizations/` instead)
+- **ALWAYS** verify: `cd rhdh-local && git status` should show "working tree clean" for tracked files
+- Copied customization files (from `apply-customizations.sh`) are gitignored and do not affect tracked file status
+
+## What to Do Instead
+
+If you need to customize configuration:
+
+1. Edit the corresponding file in `rhdh-customizations/`
+2. Run `cd rhdh-customizations && ./apply-customizations.sh` to copy it here
+3. Restart with `./down.sh && ./up.sh --customized [flags]`
+
+## Exceptions
+
+- **Upstream contributions**: Modify files here only when contributing changes back to the RHDH Local project
+- **Temporary debugging**: Make temporary changes, but restore with `git checkout` when done
+- **Reading/exploring**: Reading files here is always fine -- these are the defaults and examples
+
+## Key Files (read-only reference)
+
+- `compose.yaml` -- Base Docker Compose configuration
+- `default.env` -- Default environment variables
+- `configs/app-config/app-config.yaml` -- Default app configuration
+- `configs/dynamic-plugins/dynamic-plugins.default.yaml` -- Default plugin configuration
+- `wait-for-plugins-and-start.sh` -- RHDH entrypoint script
+- `prepare-and-install-dynamic-plugins.sh` -- Plugin installer script
+- `*.example.yaml` -- Templates for creating customizations

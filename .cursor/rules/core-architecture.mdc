@@ -1,0 +1,63 @@
+---
+alwaysApply: true
+---
+
+# RHDH Local Project - Core Architecture & Critical Rules
+
+## Project Context
+
+This workspace wraps **RHDH Local** -- a development and testing environment for Red Hat Developer Hub (RHDH). It enables platform engineers to run RHDH locally using Podman or Docker containers, testing software catalogs, TechDocs, plugins, templates, and configurations without a Kubernetes cluster.
+
+**RHDH Local is for development and testing only, NOT production use.**
+
+- Official project repository: `https://github.com/redhat-developer/rhdh-local.git`
+- Built-in TechDocs at `http://localhost:7007` when running
+- Online docs: https://docs.redhat.com/en/documentation/red_hat_developer_hub/
+
+## Critical Rules (MUST follow without exception)
+
+1. **Always Use Scripts**: Use `up.sh` and `down.sh` for container lifecycle -- NEVER use `podman compose restart/up/down` directly when orchestrator or lightspeed are enabled
+2. **Network Namespace Sharing**: Lightspeed containers share RHDH's network namespace via `network_mode: "service:rhdh"` -- restarting one requires restarting all
+3. **Edit in `rhdh-customizations/`**: All configuration edits go in `rhdh-customizations/`, then run `apply-customizations.sh` to sync copies into `rhdh-local/`
+4. **Pristine Project**: Never modify files in `rhdh-local/` directly -- it must always match the upstream git repository
+5. **Always Document**: Every significant change must be documented. Update relevant docs in `docs/`, READMEs, and inline comments so humans can understand what was done and why
+
+### Why These Rules Exist
+
+- Breaking Rule 1 or 2: Causes 504 Gateway Timeout errors (network namespace desynchronization)
+- Breaking Rule 3: Changes don't take effect, or git conflicts occur
+- Breaking Rule 4: Makes the project un-updatable via `git pull`
+- Breaking Rule 5: Creates hidden knowledge lost between sessions and invisible to human collaborators
+
+## Copy-Sync Customization System (Overview)
+
+The fundamental architectural pattern of this workspace:
+
+- **`rhdh-local/`** -- Official RHDH Local git repository (PRISTINE, never modified)
+- **`rhdh-customizations/`** -- All your configuration files, overrides, and settings
+- **`apply-customizations.sh`** -- Copies files from `rhdh-customizations/` into `rhdh-local/` so containers can read them (containers only see mounted dirs, so symlinks to external paths would break)
+- **`remove-customizations.sh`** -- Deletes the copies from `rhdh-local/` to restore pristine state
+
+### Configuration Precedence
+
+1. Default files from `rhdh-local/` load first (lowest precedence)
+2. Override files (copied from `rhdh-customizations/`) merge/replace defaults
+3. `app-config.local.yaml` loads last (highest precedence)
+4. Environment variables from `.env` override `default.env`
+
+## Quick Checklist Before Any Operation
+
+- Modifying configuration? --> Edit in `rhdh-customizations/`
+- Applying changes? --> Run `apply-customizations.sh` then use `down.sh`/`up.sh`
+- Starting/stopping containers? --> Use `./up.sh` and `./down.sh` (never direct podman/docker compose)
+- Testing pristine? --> Run `remove-customizations.sh` then `./up.sh --baseline`
+- Made changes? --> Update relevant documentation
+
+## Key Mantras
+
+1. **"Pristine project, centralized customizations"** -- `rhdh-local/` is untouched, `rhdh-customizations/` has all changes
+2. **"Copy sync, scripts manage"** -- Use `apply-customizations.sh` to apply, `remove-customizations.sh` to remove
+3. **"Edit in rhdh-customizations/"** -- Never modify customization files in `rhdh-local/`
+4. **"Clean git status"** -- Tracked files in `rhdh-local/` stay clean; copied customizations are gitignored
+5. **"Always document the why"** -- Explain decisions, not just changes
+6. **"Test both runtimes"** -- Podman and Docker must both work

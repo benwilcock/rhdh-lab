@@ -1,0 +1,71 @@
+---
+description: "Documentation requirements for any change to scripts, configuration, architecture, or workflows -- what to document, where, and when"
+alwaysApply: false
+---
+
+# Always Document
+
+Documentation is a first-class requirement in this project, on par with "always use scripts." Every significant change must leave a clear trail that humans can follow.
+
+## When to Document
+
+Document after ANY of these:
+
+- Script changes (new flags, modified behavior, bug fixes)
+- Configuration changes (new settings, changed defaults, new override patterns)
+- Architectural changes (new components, changed data flow, new patterns)
+- New features or capabilities
+- Bug fixes (what was wrong, what was fixed, why)
+- Workflow changes (new steps, changed procedures)
+- Session work with significant changes (summarize what and why)
+
+## What to Document
+
+### For Script Changes
+- Update the script's header comment block
+- Update `docs/scripts.md` if the script's purpose or interface changed
+- Update `docs/quick-reference.md` if `up.sh`/`down.sh` flags changed
+
+### For Configuration Changes
+- Update `docs/baseline-configuration.md` with the new configuration state
+- Add inline YAML comments explaining non-obvious settings
+
+### For Architectural Changes
+- Update `docs/architecture.md` with the new design
+- Update `README.md` if the high-level description changed
+
+### For New Workflows
+- Add to `docs/quick-reference.md`
+- Consider adding to the `common-workflows.mdc` Cursor rule
+
+### For Session Work
+- Use clear, descriptive commit messages explaining "why" not just "what"
+- For multi-step changes, summarize the overall goal and approach
+
+## Where Documentation Lives
+
+- `README.md` -- Getting started guide (update for high-level changes)
+- `docs/architecture.md` -- System design, copy-sync pattern (update for architectural changes)
+- `docs/scripts.md` -- up.sh/down.sh/backup.sh reference (update for script changes)
+- `docs/quick-reference.md` -- Command cheat sheet (update for new commands or workflows)
+- `docs/backup.md` -- Backup/restore guide (update for backup system changes)
+- `docs/customization-guide.md` -- How to customize RHDH (update for customization system changes)
+- `docs/baseline-configuration.md` -- Current config state (update for configuration changes)
+- `docs/testing.md` -- Testing workflows (update for test procedure changes)
+- `docs/jenkins-integration.md` -- Jenkins CI/CD setup (update for Jenkins changes)
+- `rhdh-customizations/README.md` -- Customization directory guide
+- `rhdh-local/docs/rhdh-local-guide/` -- TechDocs in MkDocs format (update for official feature docs)
+
+## Documentation Quality Standards
+
+- Use "copy-sync" terminology, NOT "symlinks" (the system copies files, not creates symlinks)
+- Explain the "why" behind decisions, not just the "what"
+- Keep examples current and tested
+- Maintain consistency across documents (same terms, same procedures)
+
+## Anti-Patterns
+
+- NEVER leave a change undocumented
+- NEVER assume the next person (human or AI) knows what you did
+- NEVER update code without updating the corresponding documentation
+- NEVER create new scripts or workflows without documenting them
