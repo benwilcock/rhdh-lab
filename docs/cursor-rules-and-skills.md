@@ -16,11 +16,9 @@ Together, rules and skills give an AI assistant deep project-specific knowledge 
 |------|-----------|--------------|
 | `core-architecture.mdc` | Always active | Provides project context, the 5 critical rules, copy-sync system overview, and configuration precedence. This is the foundational rule that all other rules build on. |
 | `copy-sync-workflow.mdc` | Manual, or auto when editing `rhdh-customizations/**` | Explains the file mapping between `rhdh-customizations/` and `rhdh-local/`, the standard edit-sync-restart workflow, configuration layers, and what to never do. |
-| `container-lifecycle.mdc` | Manual | Documents `up.sh`/`down.sh` usage, the critical network namespace sharing behavior (and why ignoring it causes 504 errors), compose file merging, and service details. |
-| `dynamic-plugins.mdc` | Manual | Covers plugin configuration files, plugin sources (OCI, tarball, local), the add/modify/restart workflow, and optional component plugins (Lightspeed, Orchestrator). |
+| `container-lifecycle.mdc` | Always active | Documents `up.sh`/`down.sh` usage, the critical network namespace sharing behavior (and why ignoring it causes 504 errors), compose file merging, and service details. |
 | `rhdh-local-protection.mdc` | Auto when editing `rhdh-local/**` | Guard rail that prevents accidental modification of upstream files. Explains what to do instead and lists exceptions. |
-| `common-workflows.mdc` | Manual | Step-by-step recipes for common tasks: add a plugin, change config, update rhdh-local, test pristine mode, add external services, share setup, view logs, troubleshoot. |
-| `always-document.mdc` | Manual | Documentation standards: when to document, what to document, where documentation lives, quality standards, and anti-patterns. |
+| `always-document.mdc` | Always active | Documentation standards: when to document, what to document, where documentation lives, quality standards, and anti-patterns. |
 | `shell-scripts.mdc` | Auto when editing `**/*.sh` | Shell script standards: error handling, runtime compatibility (Podman/Docker), output conventions, and script reference. |
 | `git-github.mdc` | Always active | Git and GitHub conventions: commit message standards, noreply email protection, secret safety checks before commits, submodule awareness, and force push guardrails. |
 
@@ -41,6 +39,22 @@ Manages the full container lifecycle: starting with various flag combinations, s
 End-to-end workflow for discovering, enabling, disabling, and configuring RHDH dynamic plugins. Uses the [rhdh-plugin-export-overlays](https://github.com/redhat-developer/rhdh-plugin-export-overlays) repository as the authoritative plugin catalog. Covers OCI artifact references, frontend mount point configuration, backend app-config integration, environment variable setup, and common issues.
 
 **Files:** `.cursor/skills/plugin-management/SKILL.md`
+
+### dynamic-plugins
+
+**Trigger phrases:** "dynamic plugin configuration", "plugin override yaml", "local plugin development", "OCI plugin", "Lightspeed plugins", "Orchestrator plugins"
+
+Covers plugin configuration files, plugin sources (OCI, tarball, local), the add/modify/restart workflow, and optional component plugins (Lightspeed, Orchestrator). Migrated from the former `dynamic-plugins.mdc` rule; use alongside **plugin-management** for catalog-driven enable/disable workflows.
+
+**Files:** `.cursor/skills/dynamic-plugins/SKILL.md`
+
+### rhdh-local-task-recipes
+
+**Trigger phrases:** "how do I add a plugin", "change app config", "pristine mode", "update rhdh-local", "add Jenkins", "backup setup", "view logs", "customizations not applied"
+
+Short recipe-style steps for specific tasks (plugins, app-config, env, image, compose services, baseline, backup, logs, troubleshooting). Complements **rhdh-lifecycle**, which covers general start/stop/restart and operational flags.
+
+**Files:** `.cursor/skills/rhdh-local-task-recipes/SKILL.md`
 
 ## Using with Cursor
 
@@ -69,9 +83,10 @@ pristine submodule protection).
 For operational tasks, follow the skill procedures in:
 - `.cursor/skills/rhdh-lifecycle/SKILL.md` -- starting, stopping, configuring RHDH
 - `.cursor/skills/plugin-management/SKILL.md` -- adding and managing dynamic plugins
+- `.cursor/skills/dynamic-plugins/SKILL.md` -- plugin file layout, sources, and local development
 
-Additional rules in `.cursor/rules/` cover specific topics (container lifecycle, dynamic
-plugins, shell script standards) -- read them when working on related files.
+Additional rules in `.cursor/rules/` cover specific topics (container lifecycle, shell
+script standards) -- read them when working on related files.
 ```
 
 ### GitHub Copilot
@@ -85,10 +100,11 @@ Most agentic coding tools support some form of project-level instructions or con
 - `.cursor/rules/core-architecture.mdc` -- the essential project context (start here)
 - `.cursor/skills/rhdh-lifecycle/SKILL.md` -- operational procedures
 - `.cursor/skills/plugin-management/SKILL.md` -- plugin workflows
+- `.cursor/skills/dynamic-plugins/SKILL.md` -- dynamic plugin files and local development
 
 ### Manual Reference
 
 Even without any AI tool, the rules and skills serve as concise, well-structured reference documentation:
 
 - **Rules** in `.cursor/rules/` describe project conventions and guard rails -- read `core-architecture.mdc` first for the big picture
-- **Skills** in `.cursor/skills/` contain detailed operational procedures -- read `rhdh-lifecycle/SKILL.md` for day-to-day operations and `plugin-management/SKILL.md` for plugin workflows
+- **Skills** in `.cursor/skills/` contain detailed operational procedures -- read `rhdh-lifecycle/SKILL.md` for day-to-day operations, `plugin-management/SKILL.md` and `dynamic-plugins/SKILL.md` for plugin workflows

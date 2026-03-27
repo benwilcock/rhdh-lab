@@ -1,4 +1,5 @@
 ---
+description: "Shell script standards for this workspace -- set -euo pipefail, Podman and Docker compatibility, output conventions, and key script references"
 globs:
   - "**/*.sh"
 alwaysApply: false

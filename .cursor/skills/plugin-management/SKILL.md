@@ -7,7 +7,7 @@ description: Manages dynamic plugins for RHDH -- discovering, enabling, disablin
 
 This skill guides users through adding, enabling, disabling, and configuring dynamic plugins on RHDH. It covers the full workflow: discovering plugins, reading plugin metadata, integrating and configuring plugins, applying changes to containers, and troubleshooting.
 
-> **Note**: This skill complements the `dynamic-plugins.mdc` workspace rule. The rule covers file layout and local plugin development; this skill covers the full end-to-end workflow for discovering and adding plugins from external sources.
+> **Note**: This skill complements the `dynamic-plugins` workspace skill. That skill covers file layout and local plugin development; this skill covers the full end-to-end workflow for discovering and adding plugins from external sources.
 
 ## Plugin Configuration
 

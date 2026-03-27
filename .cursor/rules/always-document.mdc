@@ -1,6 +1,6 @@
 ---
 description: "Documentation requirements for any change to scripts, configuration, architecture, or workflows -- what to document, where, and when"
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Always Document
@@ -36,7 +36,7 @@ Document after ANY of these:
 
 ### For New Workflows
 - Add to `docs/quick-reference.md`
-- Consider adding to the `common-workflows.mdc` Cursor rule
+- Consider adding to the `rhdh-local-task-recipes` skill (`.cursor/skills/rhdh-local-task-recipes/SKILL.md`)
 
 ### For Session Work
 - Use clear, descriptive commit messages explaining "why" not just "what"

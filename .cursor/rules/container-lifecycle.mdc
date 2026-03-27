@@ -1,6 +1,6 @@
 ---
 description: "Container lifecycle management with up.sh and down.sh scripts, network namespace sharing, and compose file merging for RHDH Local"
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Container Lifecycle Management

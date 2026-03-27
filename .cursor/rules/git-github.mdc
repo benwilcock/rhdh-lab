@@ -1,4 +1,5 @@
 ---
+description: "Git and GitHub conventions -- commit messages, noreply identity, pre-commit secret checks, rhdh-local submodule handling, and force-push guardrails"
 alwaysApply: true
 ---
 

@@ -1,4 +1,5 @@
 ---
+description: "Pristine rhdh-local/ guard rails -- never customize upstream files here; use rhdh-customizations/ and apply-customizations.sh instead"
 globs:
   - "rhdh-local/**"
 alwaysApply: false

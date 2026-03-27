@@ -1,6 +1,6 @@
 ---
+name: dynamic-plugins
 description: "Dynamic plugin configuration, installation, sources, and local development for RHDH"
-alwaysApply: false
 ---
 
 # Dynamic Plugin System

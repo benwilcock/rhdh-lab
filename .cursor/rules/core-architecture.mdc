@@ -1,4 +1,5 @@
 ---
+description: "RHDH Local project context, copy-sync customization model, configuration precedence, and the five critical rules (scripts, network namespace, rhdh-customizations/, pristine rhdh-local/, documentation)"
 alwaysApply: true
 ---
 

@@ -1,10 +1,11 @@
 ---
-alwaysApply: false
+name: rhdh-local-task-recipes
+description: "Short recipe-style procedures for specific RHDH Local tasks -- dynamic plugins, app-config, env and image changes, apply-customizations and restarts, pristine baseline, compose overrides and external services, backup, logs, troubleshooting customizations, and rhdh-local git updates. For general container start/stop/restart, flags, health, and day-to-day operations, prefer the rhdh-lifecycle skill. Use when the user asks how to perform these specific tasks or when editing rhdh-customizations/ or root lifecycle scripts (up.sh, down.sh, backup.sh)."
 ---
 
-# Common Workflows
+# RHDH Local Task Recipes
 
-Reference guide for common RHDH Local tasks. Use `@common-workflows` in chat to load this rule.
+Reference guide for common RHDH Local tasks. Mention `@rhdh-local-task-recipes` in chat to load this skill explicitly.
 
 ## Add a Plugin
 
@@ -50,7 +51,7 @@ cd rhdh-customizations && ./apply-customizations.sh  # Reapply customizations
 cd .. && ./up.sh --customized [flags]        # Restart
 ```
 
-## Add an External Service (e.g. Jenkins)
+## Add an Additional Containerized Service (e.g. A Jenkins Container)
 
 1. Add service to: `rhdh-customizations/compose.override.yaml`
    - Define image, ports, volumes, environment
