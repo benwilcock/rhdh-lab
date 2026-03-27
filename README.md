@@ -106,6 +106,34 @@ cd rhdh-local && git pull && cd ..
 ./up.sh --baseline # Handy for checking everything starts up OK before customizing further
 ```
 
+## Troubleshooting
+
+### `compose.yaml` not found or submodule clone fails
+
+If `./up.sh` fails with `open .../rhdh-local/compose.yaml: no such file or directory`, the **rhdh-local** submodule was never checked out. The `rhdh-local/` directory must contain the full upstream tree (including `compose.yaml`), not only files copied from `rhdh-customizations/`.
+
+- **Fresh clone:** use `git clone --recurse-submodules <url>` so `rhdh-local` is populated automatically.
+- **Existing clone:** run `git submodule update --init --recursive` from the repo root.
+
+If Git reports that `rhdh-local` already exists and is not empty, something created a partial directory without cloning the submodule. Rename or remove that directory (after saving anything you need from `rhdh-customizations/`), then run `git submodule update --init --recursive` again. Re-run `rhdh-customizations/apply-customizations.sh` afterward.
+
+### GitHub sign-in: "Auth provider registered for 'github' is misconfigured"
+
+That response usually means the **OAuth client ID and secret are not set inside the `rhdh` container**, or **`BASE_URL` does not match the URL in the browser**.
+
+1. **Secrets:** Ensure `rhdh-customizations/.env` defines `AUTH_GITHUB_CLIENT_ID` and `AUTH_GITHUB_CLIENT_SECRET` (see `.env.example`). Run `rhdh-customizations/apply-customizations.sh`, then restart with `./down.sh` and `./up.sh` so `rhdh-local/.env` is loaded by Compose.
+2. **Same origin:** Set `BASE_URL` in that same `.env` to the origin users use (for example `https://your-host.example` if you access RHDH over HTTPS on a hostname, not `http://localhost:7007`).
+3. **GitHub OAuth App:** In the GitHub Developer Settings for your OAuth App, set the authorization callback URL to  
+   `{BASE_URL}/api/auth/github/handler/frame`  
+   (replace `{BASE_URL}` with the same value as in `.env`, with no trailing slash).
+
+4. **GitHub App credentials file (`github-app-credentials.yaml`):** If `rhdh-customizations/configs/app-config/app-config.local.yaml` references  
+   `$include: ../extra-files/github-app-credentials.yaml` under `integrations.github`, you **must** supply that file (or recreate it after a new clone or machine). Put it at:
+
+   `rhdh-customizations/configs/extra-files/github-app-credentials.yaml`
+
+   It is not in the repo (secrets). Run `apply-customizations.sh` after adding or updating it so a copy exists at `rhdh-local/configs/extra-files/github-app-credentials.yaml` for the container. If the file is missing, the backend fails at startup with an error about failing to read the include. If you are not using a GitHub App for integrations, remove or comment out the `apps:` / `$include` block and rely on `GITHUB_TOKEN` in `.env` instead.
+
 ## License
 
 - **RHDH Local**: Apache 2.0 (see `rhdh-local/LICENSE`)
