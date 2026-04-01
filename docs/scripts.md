@@ -26,7 +26,14 @@ Starts RHDH Local with your choice of mode, optional components, and Lightspeed 
 | `--ollama` | Lightspeed with Ollama local LLM (implies `--lightspeed`) |
 | `--safety-guard` | Enable safety guard (implies `--lightspeed`) |
 | `--follow-logs`, `-f` | Tail logs after startup |
+| `--last` | Reuse the last successful startup options (see below) |
 | `--help`, `-h` | Show help message |
+
+### Last run settings (`--last`)
+
+After a successful `podman compose up -d` / `docker compose up -d`, `up.sh` writes the effective configuration to **`.last-run-settings`** in the workspace root (gitignored). The file stores mode, Lightspeed/Orchestrator toggles, Lightspeed provider, safety guard, and follow-logs — not the container runtime, which is always auto-detected on each run.
+
+Use `./up.sh --last` to start again with those saved options (non-interactive, no other configuration flags). If the file is missing or invalid, the script exits with an error until you complete at least one successful start with explicit flags or interactive mode.
 
 ### Behavior
 
@@ -36,7 +43,8 @@ Starts RHDH Local with your choice of mode, optional components, and Lightspeed 
    - `--baseline`: runs `remove-customizations.sh` to remove copies
 3. Builds the compose command with appropriate `-f` flags for selected components
 4. Executes `podman compose up -d` (or `docker compose`)
-5. Displays access URL and log commands
+5. On success, writes `.last-run-settings` for a future `./up.sh --last`
+6. Displays access URL and log commands
 
 ### Interactive Mode
 

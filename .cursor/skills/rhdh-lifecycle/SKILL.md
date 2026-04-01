@@ -42,6 +42,7 @@ Use `./up.sh` with flags. Never use `podman compose up` directly.
 | `--orchestrator` | Enable Orchestrator (Sonataflow) |
 | `--both` | Enable both Lightspeed and Orchestrator |
 | `--follow-logs` / `-f` | Tail container logs after startup |
+| `--last` | Repeat last successful startup (reads `.last-run-settings`; no other config flags) |
 
 ### Common Start Commands
 
@@ -72,6 +73,9 @@ Use `./up.sh` with flags. Never use `podman compose up` directly.
 
 # Interactive mode (prompts for options)
 ./up.sh
+
+# Same flags as your last successful start (after one successful run)
+./up.sh --last
 ```
 
 ### Choosing Start Flags

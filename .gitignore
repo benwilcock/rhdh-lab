@@ -34,3 +34,6 @@ secrets.yaml
 .cursor/mcp/
 .cursor/projects/
 .cursor/plans/
+
+# Last successful up.sh configuration (local preference)
+.last-run-settings

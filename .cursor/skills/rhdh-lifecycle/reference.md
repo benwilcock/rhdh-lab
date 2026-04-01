@@ -66,7 +66,7 @@ Containers with `network_mode: "service:rhdh"` share RHDH's network stack:
 ```bash
 ./down.sh --keep-volumes
 cd rhdh-customizations && ./apply-customizations.sh && cd ..
-./up.sh --customized --both --ollama   # match your previous flags
+./up.sh --last                         # or: match your previous flags explicitly
 ```
 
 ### Plugin Initialization Failure

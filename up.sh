@@ -15,6 +15,7 @@
 #   --ollama           Use Ollama provider for Lightspeed (implies --lightspeed)
 #   --safety-guard     Enable safety guard for Lightspeed (implies --lightspeed)
 #   --follow-logs, -f  Follow logs after startup
+#   --last             Reuse settings from the last successful run (.last-run-settings)
 #   --help, -h         Show this help message
 #
 # Examples:
@@ -24,6 +25,7 @@
 #   ./up.sh --customized --ollama --safety-guard  # Ollama with safety guard
 #   ./up.sh --baseline                         # Pristine RHDH, no extras
 #   ./up.sh --customized --both --follow-logs  # Everything enabled, tail logs
+#   ./up.sh --last                             # Same options as last successful start
 
 set -euo pipefail
 
@@ -41,6 +43,9 @@ CUSTOMIZATIONS_DIR="${SCRIPT_DIR}/rhdh-customizations"
 LIGHTSPEED_DIR="${RHDH_LOCAL_DIR}/developer-lightspeed"
 ORCHESTRATOR_DIR="${RHDH_LOCAL_DIR}/orchestrator"
 
+# Persisted last-run settings (gitignored); written after a successful compose up
+LAST_RUN_SETTINGS_FILE="${SCRIPT_DIR}/.last-run-settings"
+
 # Default values
 MODE=""
 INCLUDE_LIGHTSPEED=false
@@ -49,6 +54,7 @@ LIGHTSPEED_PROVIDER="base"
 LIGHTSPEED_SAFETY_GUARD=false
 FOLLOW_LOGS=false
 INTERACTIVE=true
+USE_LAST=false
 
 # Function to print colored messages
 print_info() {
@@ -73,6 +79,136 @@ print_header() {
     echo -e "${BLUE}═══════════════════════════════════════════════════${NC}\n"
 }
 
+# Load validated settings from .last-run-settings (do not source arbitrary shell)
+load_last_config() {
+    local f="$LAST_RUN_SETTINGS_FILE"
+    if [ ! -f "$f" ] || [ ! -r "$f" ]; then
+        print_error "No saved last run settings found at $f"
+        print_info "Run $0 successfully once (interactive or with explicit flags), then use --last."
+        exit 1
+    fi
+
+    local line key val
+    local have_mode="" have_ls="" have_orc="" have_prov="" have_sg="" have_fl=""
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        [[ "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ -z "${line//[[:space:]]/}" ]] && continue
+        if [[ ! "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+            print_error "Invalid line in $f: $line"
+            exit 1
+        fi
+        key="${BASH_REMATCH[1]}"
+        val="${BASH_REMATCH[2]}"
+        val="${val//$'\r'/}"
+
+        case "$key" in
+            VERSION)
+                ;;
+            MODE)
+                case "$val" in
+                    customized|baseline)
+                        MODE="$val"
+                        have_mode=1
+                        ;;
+                    *)
+                        print_error "Invalid MODE in $f: $val (expected customized or baseline)"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            INCLUDE_LIGHTSPEED)
+                case "$val" in
+                    true|false)
+                        if [ "$val" = true ]; then INCLUDE_LIGHTSPEED=true; else INCLUDE_LIGHTSPEED=false; fi
+                        have_ls=1
+                        ;;
+                    *)
+                        print_error "Invalid INCLUDE_LIGHTSPEED in $f: $val"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            INCLUDE_ORCHESTRATOR)
+                case "$val" in
+                    true|false)
+                        if [ "$val" = true ]; then INCLUDE_ORCHESTRATOR=true; else INCLUDE_ORCHESTRATOR=false; fi
+                        have_orc=1
+                        ;;
+                    *)
+                        print_error "Invalid INCLUDE_ORCHESTRATOR in $f: $val"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            LIGHTSPEED_PROVIDER)
+                case "$val" in
+                    base|ollama)
+                        LIGHTSPEED_PROVIDER="$val"
+                        have_prov=1
+                        ;;
+                    *)
+                        print_error "Invalid LIGHTSPEED_PROVIDER in $f: $val"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            LIGHTSPEED_SAFETY_GUARD)
+                case "$val" in
+                    true|false)
+                        if [ "$val" = true ]; then LIGHTSPEED_SAFETY_GUARD=true; else LIGHTSPEED_SAFETY_GUARD=false; fi
+                        have_sg=1
+                        ;;
+                    *)
+                        print_error "Invalid LIGHTSPEED_SAFETY_GUARD in $f: $val"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            FOLLOW_LOGS)
+                case "$val" in
+                    true|false)
+                        if [ "$val" = true ]; then FOLLOW_LOGS=true; else FOLLOW_LOGS=false; fi
+                        have_fl=1
+                        ;;
+                    *)
+                        print_error "Invalid FOLLOW_LOGS in $f: $val"
+                        exit 1
+                        ;;
+                esac
+                ;;
+            *)
+                print_error "Unknown key in $f: $key"
+                exit 1
+                ;;
+        esac
+    done < "$f"
+
+    if [ -z "$have_mode" ] || [ -z "$have_ls" ] || [ -z "$have_orc" ] || [ -z "$have_prov" ] || [ -z "$have_sg" ] || [ -z "$have_fl" ]; then
+        print_error "Incomplete or invalid settings file: $f"
+        print_info "Delete the file and run $0 successfully once to recreate it."
+        exit 1
+    fi
+}
+
+# Persist effective configuration after a successful compose up (atomic write)
+save_last_config() {
+    local f="$LAST_RUN_SETTINGS_FILE"
+    local tmp
+    tmp="$(mktemp "${f}.XXXXXX")"
+    {
+        echo "# Last successful up.sh configuration (auto-generated; do not commit)"
+        echo "VERSION=1"
+        echo "MODE=$MODE"
+        echo "INCLUDE_LIGHTSPEED=$INCLUDE_LIGHTSPEED"
+        echo "INCLUDE_ORCHESTRATOR=$INCLUDE_ORCHESTRATOR"
+        echo "LIGHTSPEED_PROVIDER=$LIGHTSPEED_PROVIDER"
+        echo "LIGHTSPEED_SAFETY_GUARD=$LIGHTSPEED_SAFETY_GUARD"
+        echo "FOLLOW_LOGS=$FOLLOW_LOGS"
+    } > "$tmp"
+    mv "$tmp" "$f"
+}
+
 # Function to show help
 show_help() {
     cat << EOF
@@ -95,6 +231,7 @@ Lightspeed Options:
 
 Other:
   --follow-logs, -f  Follow logs after startup (tail all container logs)
+  --last             Reuse settings from the last successful run ($LAST_RUN_SETTINGS_FILE)
   --help, -h         Show this help message
 
 Examples:
@@ -105,54 +242,70 @@ Examples:
   $0 --baseline                         # Pristine RHDH, no extras
   $0 --customized --both                # Everything enabled
   $0 --customized --ollama --follow-logs # With Lightspeed using Ollama, tail logs
+  $0 --last                             # Repeat last successful startup options
 
 EOF
 }
 
 # Parse command-line arguments
 parse_args() {
+    USE_LAST=false
+    local extra_config_count=0
+
     if [ $# -eq 0 ]; then
         INTERACTIVE=true
         return
     fi
-    
+
     INTERACTIVE=false
-    
+
     while [ $# -gt 0 ]; do
         case "$1" in
+            --last)
+                USE_LAST=true
+                shift
+                ;;
             --baseline)
                 MODE="baseline"
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --customized)
                 MODE="customized"
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --lightspeed)
                 INCLUDE_LIGHTSPEED=true
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --orchestrator)
                 INCLUDE_ORCHESTRATOR=true
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --both)
                 INCLUDE_LIGHTSPEED=true
                 INCLUDE_ORCHESTRATOR=true
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --ollama)
                 INCLUDE_LIGHTSPEED=true
                 LIGHTSPEED_PROVIDER="ollama"
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --safety-guard)
                 INCLUDE_LIGHTSPEED=true
                 LIGHTSPEED_SAFETY_GUARD=true
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --follow-logs|-f)
                 FOLLOW_LOGS=true
+                extra_config_count=$((extra_config_count + 1))
                 shift
                 ;;
             --help|-h)
@@ -166,7 +319,17 @@ parse_args() {
                 ;;
         esac
     done
-    
+
+    if [ "$USE_LAST" = true ] && [ "$extra_config_count" -gt 0 ]; then
+        print_error "--last cannot be combined with other configuration options"
+        exit 1
+    fi
+
+    if [ "$USE_LAST" = true ]; then
+        load_last_config
+        return
+    fi
+
     # Default to customized if not specified
     if [ -z "$MODE" ]; then
         MODE="customized"
@@ -426,6 +589,9 @@ main() {
     COMPOSE_CMD=$(build_compose_command "$RUNTIME")
     print_info "Executing: $COMPOSE_CMD"
     eval "$COMPOSE_CMD"
+
+    save_last_config
+    print_info "Saved last run settings to $LAST_RUN_SETTINGS_FILE"
     
     # Success message
     echo ""

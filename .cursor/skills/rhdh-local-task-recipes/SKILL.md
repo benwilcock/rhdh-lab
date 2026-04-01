@@ -11,7 +11,7 @@ Reference guide for common RHDH Local tasks. Mention `@rhdh-local-task-recipes` 
 
 1. Edit: `rhdh-customizations/configs/dynamic-plugins/dynamic-plugins.override.yaml`
 2. Sync: `cd rhdh-customizations && ./apply-customizations.sh`
-3. Restart: `cd .. && ./down.sh && ./up.sh --customized [flags]`
+3. Restart: `cd .. && ./down.sh && ./up.sh --customized [flags]` (or `./up.sh --last` after a successful start)
 
 ## Change Application Configuration
 

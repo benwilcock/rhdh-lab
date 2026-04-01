@@ -12,6 +12,7 @@ Command cheat sheet for common rhdh-lab operations.
 ./up.sh --customized --follow-logs   # Start and tail logs
 ./up.sh --baseline                   # Pristine RHDH (no customizations)
 ./up.sh --customized --ollama        # Lightspeed with local LLM (Ollama)
+./up.sh --last                       # Same options as last successful start
 ```
 
 ## Stop RHDH
@@ -44,7 +45,8 @@ podman compose logs install-dynamic-plugins  # Plugin installation log
 
 ```bash
 ./down.sh --keep-volumes
-./up.sh --customized
+./up.sh --last                       # same flags as last successful start
+# or: ./up.sh --customized [flags]
 ```
 
 ### Fresh Start (troubleshooting)
@@ -129,6 +131,7 @@ rhdh-local/
 | `--ollama` | Lightspeed with Ollama (local LLM) |
 | `--safety-guard` | Lightspeed with safety guard |
 | `--follow-logs`, `-f` | Tail logs after startup |
+| `--last` | Repeat last successful startup (uses `.last-run-settings`) |
 | `--help` | Show help |
 
 ### down.sh

@@ -19,6 +19,7 @@ The workspace provides `up.sh` and `down.sh` scripts that MUST be used for start
 ./up.sh --customized --orchestrator # With Orchestrator
 ./up.sh --customized --both --ollama # Everything enabled
 ./up.sh --customized --follow-logs  # Tail logs after startup
+./up.sh --last                      # Repeat last successful startup options
 ```
 
 ### Stopping Containers
