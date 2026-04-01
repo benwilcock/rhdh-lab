@@ -220,7 +220,7 @@ catalog: # You can use local files from catalog-entities directory to load enti
     - type: url
       target: https://github.com/benwilcock-org/springboot-maven/blob/main/catalog-info.yaml 
     - type: url
-      target: https://github.com/benwilcock/springboot-djl-demo/blob/main/catalog-info.yml
+      target: https://github.com/benwilcock-org/springboot-sentiment-demo/blob/main/catalog-info.yml
 
     # Extensions Plugin needs this target to pull in the information about Plugins
     # - type: file
@@ -321,9 +321,9 @@ scorecard:
             - key: success
               expression: '<10'
             - key: warning
-              expression: '10-50'
+              expression: '10-100'
             - key: error
-              expression: '>50'
+              expression: '>100'
     jira:
       open_issues:
         options:

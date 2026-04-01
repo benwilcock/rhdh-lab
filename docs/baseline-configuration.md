@@ -57,6 +57,8 @@ Jenkins runs as part of the unified RHDH compose stack via `compose.override.yam
 | `backstage-community-plugin-todo` | Display TODO comments from code | OCI Registry |
 | `backstage-community-plugin-todo-backend` | TODO scanning backend | OCI Registry |
 
+The Todo entity tab is configured to appear only for **Component** entities that carry the `github.com/project-slug` annotation (see `dynamic-plugins.override.yaml`).
+
 ### Marketplace
 
 | Plugin | Purpose | Source |
@@ -88,6 +90,15 @@ Jenkins runs as part of the unified RHDH compose stack via `compose.override.yam
 | `red-hat-developer-hub-backstage-plugin-software-catalog-mcp-tool` | Software catalog MCP tool | OCI Registry |
 | `red-hat-developer-hub-backstage-plugin-techdocs-mcp-tool` | TechDocs MCP tool | OCI Registry |
 
+### Orchestrator (when enabled via `up.sh --orchestrator`)
+
+| Plugin | Purpose | Source |
+|--------|---------|--------|
+| `red-hat-developer-hub-backstage-plugin-orchestrator` | Workflows UI and entity tabs | OCI Registry |
+| `red-hat-developer-hub-backstage-plugin-orchestrator-backend` | Orchestrator backend | OCI Registry |
+
+The frontend package includes dynamic routes, a **Workflows** entity tab, and a catalog tab mount point gated by `IsOrchestratorCatalogTabAvailable` (see `dynamic-plugins.override.yaml`).
+
 ### Scorecard -- Project Health Metrics
 
 Provides component health monitoring via GitHub and Jira metrics, displayed as color-coded scorecards.
@@ -101,7 +112,7 @@ Provides component health monitoring via GitHub and Jira metrics, displayed as c
 
 Scorecard thresholds (configured in `app-config.local.yaml`):
 - GitHub open PRs: success < 10, warning 10-50, error > 50
-- Jira open issues: success < 10, warning 10-50, error > 50
+- Jira open issues: success < 10, warning 10-100, error > 100
 
 ---
 

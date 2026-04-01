@@ -2,15 +2,15 @@
 # The usernameMatchingUserEntityName resolver requires metadata.name
 # to exactly match the GitHub username of the person signing in.
 #
-# Replace "your-github-username" and "Your Name" with your own values.
+# metadata.name must match the GitHub login used at sign-in (see app-config sign-in resolver).
 
 apiVersion: backstage.io/v1alpha1
 kind: User
 metadata:
-  name: your-github-username
+  name: benwilcock
 spec:
   profile:
-    displayName: Your Name
+    displayName: Ben Wilcock
   memberOf:
     - rhdh-team
 

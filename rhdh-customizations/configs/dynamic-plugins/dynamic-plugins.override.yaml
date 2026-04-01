@@ -127,6 +127,12 @@ plugins:
             mountPoints:
               - mountPoint: entity.page.todo/cards
                 importName: EntityTodoContent
+                config:
+                  # Tab only for components linked to a GitHub repo (catalog convention).
+                  if:
+                    allOf:
+                      - isKind: component
+                      - hasAnnotation: github.com/project-slug
             entityTabs:
               - path: /todo
                 title: Todo
@@ -241,6 +247,33 @@ plugins:
   # Orchestrator plugins -- enable and configure dataIndexService URL for sonataflow
   - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator:{{inherit}}'
     disabled: false
+    pluginConfig:
+      dynamicPlugins:
+        frontend:
+          red-hat-developer-hub.backstage-plugin-orchestrator:
+            appIcons:
+              - importName: OrchestratorIcon
+                name: orchestratorIcon
+            dynamicRoutes:
+              - importName: OrchestratorPage
+                menuItem:
+                  icon: orchestratorIcon
+                  text: Orchestrator
+                path: /orchestrator
+            entityTabs:
+              - path: /workflows
+                title: Workflows
+                mountPoint: entity.page.workflows
+            mountPoints:
+              - mountPoint: entity.page.workflows/cards
+                importName: OrchestratorCatalogTab
+                config:
+                  layout:
+                    gridColumn: '1 / -1'
+                  # Only show when entity has orchestrator.io/workflows (see workflows-tab.md).
+                  if:
+                    anyOf:
+                      - IsOrchestratorCatalogTabAvailable
   - package: 'oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-orchestrator-backend:{{inherit}}'
     disabled: false
     pluginConfig:
